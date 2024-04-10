@@ -20,6 +20,8 @@ namespace hal
         void SetAddress(hal::MacAddress macAddress, services::GapDeviceAddressType addressType) override;
         void StartDeviceDiscovery() override;
         void StopDeviceDiscovery() override;
+        bool IsPeerDeviceBonded(services::GapAdvertisingEventAddressType addressType, hal::MacAddress macAddress) override;
+        void GetPeerDevicePrivateAddress(hal::MacAddress randomMacAddress, hal::MacAddress& privateMacAddress) override;
 
         // Implementation of GapPairing
         void AllowPairing(bool allow) override;

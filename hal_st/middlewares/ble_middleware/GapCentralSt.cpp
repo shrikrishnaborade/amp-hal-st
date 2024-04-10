@@ -1,5 +1,6 @@
 #include "hal_st/middlewares/ble_middleware/GapCentralSt.hpp"
 #include "ble_defs.h"
+#include "ble_gap_aci.h"
 #include "infra/event/EventDispatcherWithWeakPtr.hpp"
 #include "infra/stream/ByteInputStream.hpp"
 
@@ -77,6 +78,17 @@ namespace hal
             aci_gap_terminate_gap_proc(GAP_GENERAL_DISCOVERY_PROC);
             discovering = false;
         }
+    }
+
+    bool GapCentralSt::IsPeerDeviceBonded(services::GapAdvertisingEventAddressType addressType, hal::MacAddress macAddress)
+    {
+        return (aci_gap_is_device_bonded(static_cast<uint8_t>(addressType), macAddress.data()) == BLE_STATUS_SUCCESS);
+    }
+
+    void GapCentralSt::GetPeerDevicePrivateAddress(hal::MacAddress randomMacAddress, hal::MacAddress& privateMacAddress)
+    {
+        privateMacAddress = randomMacAddress;
+        aci_gap_resolve_private_addr(randomMacAddress.data(), privateMacAddress.data());
     }
 
     void GapCentralSt::AllowPairing(bool)

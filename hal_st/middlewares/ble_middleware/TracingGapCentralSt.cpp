@@ -43,6 +43,18 @@ namespace hal
         GapCentralSt::StopDeviceDiscovery();
     }
 
+    bool TracingGapCentralSt::IsPeerDeviceBonded(services::GapAdvertisingEventAddressType addressType, hal::MacAddress macAddress)
+    {
+        tracer.Trace() << "TracingGapCentralSt::IsPeerDeviceBonded";
+        return GapCentralSt::IsPeerDeviceBonded(addressType, macAddress);
+    }
+
+    void TracingGapCentralSt::GetPeerDevicePrivateAddress(hal::MacAddress randomMacAddress, hal::MacAddress& privateMacAddress)
+    {
+        tracer.Trace() << "TracingGapCentralSt::GetPeerDevicePrivateAddress";
+        GapCentralSt::GetPeerDevicePrivateAddress(randomMacAddress, privateMacAddress);
+    }
+
     void TracingGapCentralSt::RemoveAllBonds()
     {
         tracer.Trace() << "TracingGapCentralSt::RemoveAllBonds";
