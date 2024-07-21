@@ -10,6 +10,8 @@ extern "C"
 #include "ble/core/ble_core.h"
 }
 
+#include "services/tracer/GlobalTracer.hpp"
+
 namespace hal
 {
     GattClientSt::GattClientSt(hal::HciEventSource& hciEventSource)
@@ -24,7 +26,8 @@ namespace hal
             observer.ServiceDiscoveryComplete();
         };
 
-        aci_gatt_disc_all_primary_services(connectionHandle);
+        auto rc = aci_gatt_disc_all_primary_services(connectionHandle);
+        if(rc != BLE_STATUS_SUCCESS) services::GlobalTracer().Trace() << "StartServiceDiscovery: aci_gatt_disc_all_primary_services: rc " << rc;
     }
 
     void GattClientSt::StartCharacteristicDiscovery(const services::GattService& service)
@@ -34,7 +37,8 @@ namespace hal
             observer.CharacteristicDiscoveryComplete();
         };
 
-        aci_gatt_disc_all_char_of_service(connectionHandle, service.Handle(), service.EndHandle());
+        auto rc = aci_gatt_disc_all_char_of_service(connectionHandle, service.Handle(), service.EndHandle());
+        if(rc != BLE_STATUS_SUCCESS) services::GlobalTracer().Trace() << "StartCharacteristicDiscovery: aci_gatt_disc_all_char_of_service: rc " << rc;
     }
 
     void GattClientSt::StartDescriptorDiscovery(const services::GattService& service)
@@ -44,26 +48,30 @@ namespace hal
             observer.DescriptorDiscoveryComplete();
         };
 
-        aci_gatt_disc_all_char_desc(connectionHandle, service.Handle(), service.EndHandle());
+        auto rc = aci_gatt_disc_all_char_desc(connectionHandle, service.Handle(), service.EndHandle());
+        if(rc != BLE_STATUS_SUCCESS) services::GlobalTracer().Trace() << "StartDescriptorDiscovery: aci_gatt_disc_all_char_desc: rc " << rc;
     }
 
     void GattClientSt::Read(const services::GattClientCharacteristicOperationsObserver& characteristic, const infra::Function<void(const infra::ConstByteRange&)>& onResponse) const
     {
         this->onResponse = onResponse;
 
-        aci_gatt_read_char_value(connectionHandle, characteristic.CharacteristicValueHandle());
+        auto rc = aci_gatt_read_char_value(connectionHandle, characteristic.CharacteristicValueHandle());
+        if(rc != BLE_STATUS_SUCCESS) services::GlobalTracer().Trace() << "Read: aci_gatt_read_char_value: rc " << rc;
     }
 
     void GattClientSt::Write(const services::GattClientCharacteristicOperationsObserver& characteristic, infra::ConstByteRange data, const infra::Function<void()>& onDone) const
     {
         this->onDone = onDone;
 
-        aci_gatt_write_char_value(connectionHandle, characteristic.CharacteristicValueHandle(), data.size(), data.cbegin());
+        auto rc = aci_gatt_write_char_value(connectionHandle, characteristic.CharacteristicValueHandle(), data.size(), data.cbegin());
+        if(rc != BLE_STATUS_SUCCESS) services::GlobalTracer().Trace() << "Write: aci_gatt_write_char_value: rc " << rc;
     }
 
     void GattClientSt::WriteWithoutResponse(const services::GattClientCharacteristicOperationsObserver& characteristic, infra::ConstByteRange data) const
     {
-        aci_gatt_write_without_resp(connectionHandle, characteristic.CharacteristicValueHandle(), data.size(), data.cbegin());
+        auto rc = aci_gatt_write_without_resp(connectionHandle, characteristic.CharacteristicValueHandle(), data.size(), data.cbegin());
+        if(rc != BLE_STATUS_SUCCESS) services::GlobalTracer().Trace() << "WriteWithoutResponse: aci_gatt_write_without_resp: rc " << rc;
     }
 
     void GattClientSt::EnableNotification(const services::GattClientCharacteristicOperationsObserver& characteristic, const infra::Function<void()>& onDone) const
@@ -284,7 +292,8 @@ namespace hal
 
     void GattClientSt::HandleGattConfirmIndication(services::AttAttribute::Handle handle)
     {
-        aci_gatt_confirm_indication(handle);
+        auto rc = aci_gatt_confirm_indication(handle);
+        if(rc != BLE_STATUS_SUCCESS) services::GlobalTracer().Trace() << "HandleGattConfirmIndication: aci_gatt_confirm_indication: rc " << rc;
     }
 
     void GattClientSt::HandleServiceDiscovered(infra::DataInputStream& stream, bool isUuid16)
@@ -361,6 +370,9 @@ namespace hal
         const uint16_t offsetCccd = 1;
 
         if ((characteristic.CharacteristicProperties() & property) == property)
-            aci_gatt_write_char_desc(connectionHandle, characteristic.CharacteristicValueHandle() + offsetCccd, sizeof(characteristicValue), reinterpret_cast<uint8_t*>(&characteristicValue));
+        {
+            auto rc = aci_gatt_write_char_desc(connectionHandle, characteristic.CharacteristicValueHandle() + offsetCccd, sizeof(characteristicValue), reinterpret_cast<uint8_t*>(&characteristicValue));
+            if(rc != BLE_STATUS_SUCCESS) services::GlobalTracer().Trace() << "WriteCharacteristicDescriptor: aci_gatt_write_char_desc: rc " << rc;
+        }
     }
 }
